@@ -1,17 +1,22 @@
 // REST API 서버 만들기(p62~)
-// - 기본적으로 HTTP 서버임
-// - 3.3.1에서 작성한 HTTP 서버에 메서드, URL별로 분기할 수 있도록 몇가지 코드를 추가함
 const http = require('http')
 const url = require('url')
-// url 모듈은 url 정보를 객체로 가져와 분석하거나(parse) url 객체를 문자열로 바꿔주는 기능(format, resolve)을 수행함
 const querystring = require('querystring')
-// querystring 모듈은 url 객체의 query와 관련된 모듈
-// 분명 유용한 모듈이긴 하지만 url 모듈의 두 번째 인자 값을 조정함으로써 해결할 수도 있음(?)
 
+// 메서드와 URI별 각 기능 매칭하기(p65)
+const members = require('./monolithic_members.js')
+const goods = require('./monolithic_goods')
+const purchases = require('./monolithic_purchases.js')
+
+/**
+ * Http 서버를 생성하고 요청에 대한 처리
+ */
 let server = http.createServer((req, res) => {
   let method = req.method
   let uri = url.parse(req.url, true)
   let pathname = uri.pathname
+
+  console.log(`${method} | ${uri} | ${pathname}`)
 
   if (method === "POST" || method === "PUT") {
     let body = ""
@@ -20,17 +25,50 @@ let server = http.createServer((req, res) => {
 
     req.on('end', () => {
       let params
-      if ( req.headers['content-type'] == "application/json") {
+      if ( req.headers['content-type'] === "application/json") {
         params = JSON.parse(body)
       } else {
         params = querystring.parse(body)
       }
 
-      res.end("response 1")
+      onRequest(res, method, pathname, params)
 
     })
   } else {
-    res.end("response 2")
+    onRequest(res, method, pathname, uri.query)
   }
-
 }).listen(8000)
+
+/**
+ * 요청에 대해 회원관리 상품관리 구매 관리 모듈로 분기
+ * @param res       response 객체
+ * @param method    메소드
+ * @param pathname  URI
+ * @param params    입력 파라미터
+ */
+function onRequest(res, method, pathname, params) {
+  switch (pathname){
+    case "/members" :
+      members.onRequest(res, method, pathname, params, response)
+      break
+    case "/goods" :
+      goods.onRequest(res, method, pathname, params, response)
+      break
+    case "/purchases" :
+      purchases.onRequest(res, method, pathname, params, response)
+      break
+    default:
+      res.writeHead(404)
+      return res.end()
+  }
+}
+
+/**
+ * HTTP 헤더에 JSON형식으로 응답
+ * @param res     response 객체
+ * @param packet  결과 파라미터
+ */
+function response(res, packet){
+  res.writeHead(200, {'Content-Type': 'application/json'})
+  res.end(JSON.stringify(packet))
+}
