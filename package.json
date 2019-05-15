@@ -2,9 +2,10 @@
   "name": "nodejs-microservice",
   "version": "1.0.0",
   "description": "",
-  "main": "monolithic.js",
+  "main": "Biz/monolithic.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node Biz/monolithic.js",
+    "test": "node test.js"
   },
   "author": "",
   "license": "ISC",

@@ -34,10 +34,6 @@ exports.onRequest = function (res, method, pathname, params, cb) {
  */
 function register(method, pathname, params, cb) {
 
-  console.log('[purchases] function register(method, pathname, params, cb) :',
-    `${method} | ${pathname} | ${params} | ${cb} `)
-  console.log('reponse.key ==>', params.key)
-
   let response = {
     key: params.key,
     errorcode: 0,
@@ -50,17 +46,21 @@ function register(method, pathname, params, cb) {
     cb(response)
   } else {
     let connection = mysql.createConnection(conn)
-    let sql = 'insert into purchases(userid, goodid) values(?,?)'
     connection.connect()
-    connection.query(sql, [params.userid, params.goodsid],
-      (err, results, fields) => {
-        if (err) {
-          response.errorcode = 1
-          response.errormessage = err
-        }
-        cb(response)
+
+    let sql = 'insert into purchases(userid, goodsid) values(?,?)'
+    let vals=  [params.userid, params.goodsid]
+    sql = mysql.format(sql, vals)
+    console.log('purchases-insert-sql ==>', sql)
+
+    connection.query(sql, (err, results, fields) => {
+      if (err) {
+        response.errorcode = 1
+        response.errormessage = err
       }
-    )
+      cb(response)
+    })
+
     connection.end()
   }
 }
@@ -74,10 +74,6 @@ function register(method, pathname, params, cb) {
  */
 function inquiry(method, pathname, params, cb) {
 
-  console.log('[purchases] function inquiry(method, pathname, params, cb) :',
-    `${method} | ${pathname} | ${params} | ${cb} `)
-  console.log('reponse.key ==>', params.key)
-
   let response = {
     key: params.key,
     errorcode: 0,
@@ -88,12 +84,17 @@ function inquiry(method, pathname, params, cb) {
     response.errorcode = 1
     response.errormessage = 'Invalid Parameters'
   } else {
-    let connection = mysql.createConnection(conn);
-    let sql = `select id, goodsid, date from purchases where userid = ${params.userid}`
-    // ToDo : 교재와 다르게 sql 코딩함
+    let connection = mysql.createConnection(conn)
     connection.connect()
+
+    let sql = 'select id, goodsid, date from purchases where userid = ?'
+    let vals= [params.userid]
+    sql = mysql.format(sql, vals)
+
+    console.log('purchases-select-sql ==> ', sql)
+
     connection.query(sql, (err, results, fields) => {
-      if (err || result.length === 0) {
+      if (err || results.length === 0) {
         response.errorcode = 1
         response.errormessage = err
       } else {

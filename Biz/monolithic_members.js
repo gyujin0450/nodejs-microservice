@@ -38,10 +38,6 @@ exports.onRequest = function (res, method, pathname, params, cb) {
  */
 function register(method, pathname, params, cb) {
 
-  console.log('[member] function register(method, pathname, params, cb) :',
-    `${method} | ${pathname} | ${params} | ${cb} `)
-  console.log('reponse.key ==>', params.key)
-
   let response = {
     key: params.key,
     errorcode: 0,
@@ -54,17 +50,23 @@ function register(method, pathname, params, cb) {
     cb(response)
   } else {
     let connection = mysql.createConnection(conn)
-    let sql = 'insert into member(username, password) values(?,?)'  // ToDo : 교재와 다르게 코딩
     connection.connect()
-    connection.query(sql, [params.username, password(params.password)],
-      (err, results, fields) => {
-        if (err) {
-          response.errorcode = 1
-          response.errormessage = err
-        }
-        cb(response)
+
+    // ToDo : sql문 교재와 다르게 정의함
+    let sql = 'insert into members(username, password) values (?, password(?))'
+    let vals = [params.username, params.password]
+    sql = mysql.format(sql, vals)
+
+    console.log('member-insert-sql ==>', sql)
+
+    connection.query(sql, (err, results, fields) => {
+      if (err) {
+        response.errorcode = 1
+        response.errormessage = err
       }
-    )
+
+      cb(response)
+    })
     connection.end()
   }
 }
@@ -78,10 +80,6 @@ function register(method, pathname, params, cb) {
  */
 function inquiry(method, pathname, params, cb) {
 
-  console.log('[member] function inquiry(method, pathname, params, cb) :',
-    `${method} | ${pathname} | ${params} | ${cb} `)
-  console.log('reponse.key ==>', params.key)
-
   let response = {
     key: params.key,
     errorcode: 0,
@@ -93,11 +91,14 @@ function inquiry(method, pathname, params, cb) {
     response.errormessage = 'Invalid Parameters'
   } else {
     let connection = mysql.createConnection(conn);
-    let sql = `select * from members where username = ${params.username} and password = ${params.password}`
-    // ToDo : 교재와 다르게 sql 코딩함
     connection.connect()
+
+    // ToDo : 교재와 다르게 sql 코딩함
+    let sql = `select * from members where username = ${params.username} and password = ${params.password}`
+    console.log('member-select-sql ==>',sql)
+
     connection.query(sql, (err, results, fields) => {
-      if (err || result.length === 0) {
+      if (err || results.length === 0) {
         response.errorcode = 1
         response.errormessage = err ? err : 'invalid password'
       } else {
@@ -117,9 +118,6 @@ function inquiry(method, pathname, params, cb) {
  * @param cb        콜백
  */
 function unregister(method, pathname, params, cb) {
-  console.log('[member] function unregister(method, pathname, params, cb) :',
-    `${method} | ${pathname} | ${params} | ${cb} `)
-  console.log('reponse.key ==>', params.key)
 
   let response = {
     key: params.key,
@@ -133,9 +131,15 @@ function unregister(method, pathname, params, cb) {
     cb(response)
   } else {
     let connection = mysql.createConnection(conn)
-    let sql = 'delete from members where username = ?'
     connection.connect()
-    connection.query(sql, [params.username], (err, results, fields) => {
+
+    let sql = 'delete from members where username = ?'
+    let vals= [params.username]
+    sql = mysql.format(sql, vals)
+
+    console.log('member-del-sql => ', sql)
+
+    connection.query(sql,(err, results, fields) => {
       if (err) {
         response.errorcode = 1
         response.errormessage = err

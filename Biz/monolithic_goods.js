@@ -38,10 +38,6 @@ exports.onRequest = function (res, method, pathname, params, cb) {
  */
 function register(method, pathname, params, cb) {
 
-  console.log('[goods] function register(method, pathname, params, cb) :',
-              `${method} | ${pathname} | ${params} | ${cb} `)
-  console.log('reponse.key ==>', params.key)
-
   let response = {
     key: params.key,
     errorcode: 0,
@@ -54,17 +50,24 @@ function register(method, pathname, params, cb) {
     cb(response)
   } else {
     let connection = mysql.createConnection(conn)
-    let sql = 'insert into goods(name, category, price, description) values(?,?,?,?)'
     connection.connect()
-    connection.query(sql, [params.name, params.category, params.price, params.description],
-      (err, results, fields) => {
-        if (err) {
+
+    // ToDo : 교재와 다르게 정의함
+    let sql = 'insert into goods(name, category, price, description) values( ?, ?, ?, ?)'
+    let vals = [params.name, params.category, params.price, params.description]
+    sql = mysql.format(sql, vals)
+
+    console.log('goods-insert-sql ==>', sql)
+
+    connection.query(sql, (err, results, fields) => {
+      if (err) {
           response.errorcode = 1
           response.errormessage = err
-        }
-        cb(response)
       }
-    )
+
+      cb(response)
+    })
+
     connection.end()
   }
 }
@@ -78,10 +81,6 @@ function register(method, pathname, params, cb) {
  */
 function inquiry(method, pathname, params, cb) {
 
-  console.log('[goods] function inquiry(method, pathname, params, cb) :',
-    `${method} | ${pathname} | ${params} | ${cb} `)
-  console.log('reponse.key ==>', params.key)
-
   let response = {
     key: params.key,
     errorcode: 0,
@@ -89,10 +88,13 @@ function inquiry(method, pathname, params, cb) {
   }
 
   let connection = mysql.createConnection(conn);
-  let sql = 'select * from goods'
   connection.connect()
+
+  let sql = 'select * from goods'
+  console.log('goods-insert-sql ==> ', sql)
+
   connection.query(sql, (err, results, fields) => {
-    if (err || result.length === 0) {
+    if (err || results.length === 0) {
       response.errorcode = 1
       response.errormessage = err ? err : 'no data'
     } else {
@@ -111,9 +113,6 @@ function inquiry(method, pathname, params, cb) {
  * @param cb        콜백
  */
 function unregister(method, pathname, params, cb) {
-  console.log('[goods] function unregister(method, pathname, params, cb) :',
-    `${method} | ${pathname} | ${params} | ${cb} `)
-  console.log('reponse.key ==>', params.key)
 
   let response = {
     key: params.key,
@@ -127,9 +126,15 @@ function unregister(method, pathname, params, cb) {
     cb(response)
   } else {
     let connection = mysql.createConnection(conn)
-    let sql = 'delete from goods where id = ?'
     connection.connect()
-    connection.query(sql, [params.id], (err, results, fields) => {
+
+    let sql = 'delete from goods where id = ?'
+    let vals= [params.id]
+    sql = mysql.format(sql, vals)
+
+    console.log('goods-del-sql ==>', sql)
+
+    connection.query(sql, (err, results, fields) => {
       if (err) {
         response.errorcode = 1
         response.errormessage = err
