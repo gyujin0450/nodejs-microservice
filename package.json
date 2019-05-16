@@ -2,9 +2,9 @@
   "name": "nodejs-microservice",
   "version": "1.0.0",
   "description": "",
-  "main": "Biz/monolithic.js",
+  "main": "business/monolithic.js",
   "scripts": {
-    "start": "node Biz/monolithic.js",
+    "start": "node business/monolithic.js",
     "test": "node test.js"
   },
   "author": "",
